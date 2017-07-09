@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <style>
+            ul{
+                margin: 0;
+                padding: 0;
+            }
+            li{
+                list-style: none;
+            }
+            #container{
+                width:450px;
+                height:250px;
+                position:relative;
+                overflow:hidden;
+            }
+            #container ul{
+                width:300%;
+                position:absolute;
+                transition:transform 0.5s;
+            }
+            #container ul::after,#container ul::before{
+                content:'';
+                display:block;
+                clear:both;
+            }
+            #container li{
+                float:left;
+            }
+            .slider img{
+                vertical-align:bottom;
+            }
+            .nav-list{
+                position:absolute;
+                left: 50%;
+                bottom: 2%;
+                transform: translate(-50%);
+            }
+            .nav-list .dot{
+                width:10px;
+                height:10px;
+                display:inline-block;
+                border-radius:50%;
+                background-color:#fff;
+                cursor:pointer;
+                z-index:1;
+            }
+            .nav-list .dot.active{
+                background-color:skyblue;
+            }
+            .arrow div{
+                position:absolute;
+                top:50%;
+                transform:translateY(-50%);
+                cursor:pointer;
+                z-index:1;
+                display:none;
+            }
+            #container:hover .arrow div{
+                display:block;
+            }
+            .prev{
+                left:2%;
+                width: 0;
+                height: 0;
+                border-style: solid;
+                border-width: 40px 15px 40px 0;
+                border-color: transparent skyblue transparent transparent;
+            }
+            .next{
+                right:2%;
+                width: 0;
+                height: 0;
+                border-style: solid;
+                border-width: 40px 0 40px 15px;
+                border-color: transparent transparent transparent skyblue;
+            }
+        </style>
+    </head>
+    <body>
+        <main>
+            <section id="container">
+                <ul>
+                    <li><img src="http://via.placeholder.com/450x250?text=Hello" alt=""></li>
+                    <li><img src="http://via.placeholder.com/450x250?text=World" alt=""></li>
+                    <li><img src="http://via.placeholder.com/450x250?text=Hello+World" alt=""></li>
+                </ul>
+                <nav class="nav-list">
+                    <div class="dot active" data-index="0"></div>
+                    <div class="dot" data-index="1"></div>
+                    <div class="dot" data-index="2"></div>
+                </nav>
+                <nav class="arrow">
+                    <div class="prev"></div>
+                    <div class="next"></div>
+                </nav>
+            </section>
+        </main>
+        <script>
+            ;(function(){
+                function qs(cls){
+                    return [].slice.call(document.querySelectorAll(cls))
+                }
+                function SliderJs(ctx,config){
+                    this.config = config
+                    this.speed = 2000
+                    
+                    this.sliderBox = document.querySelector(ctx)
+                    this.sliderWidth = this.sliderBox.offsetWidth
+                    this.transfer = document.querySelector(ctx+' ul')
+                    this.sliderNum = qs(ctx+' li').length
+                    this.dis = 0
+                    this.dotArr = qs('.dot')
+
+                    this.init()
+                }
+                SliderJs.prototype.init = function(){
+                    for(var i in this.config){
+                        this[i] = this.config[i]
+                    }
+                    this.auto()
+                    this.bind()
+                }
+                SliderJs.prototype.move = function(){
+                    var dis = -this.dis * this.sliderWidth,
+                        disNum = this.dis
+                    this.transfer.style.cssText = 'transform:translateX('+dis+'px);'
+
+                    this.dotArr.forEach(function(item,index){
+                        if(disNum === index){
+                            item.classList.add('active')
+                        }else{
+                            item.classList.remove('active')
+                        }
+                    })
+                }
+                SliderJs.prototype.auto = function(){
+                    var that = this
+                    this.timer = setTimeout(function(){
+                        that.move()
+                        that.dis = ++that.dis === that.sliderNum ? 0 : that.dis
+                        that.auto()
+                    },this.speed)
+                }
+                SliderJs.prototype.pause = function(){
+                    clearTimeout(this.timer)
+                }
+                SliderJs.prototype.bind = function(){
+                    var that = this
+                    this.sliderBox.addEventListener('mouseover', function(){
+                        that.pause()
+                    }, false)
+                    this.sliderBox.addEventListener('mouseleave', function(){
+                        that.auto()
+                    }, false)
+
+                    var nav = document.querySelector('.nav-list')
+                    nav.addEventListener('click',function(e){
+                        var target = e.target,
+                            tagName = target.tagName
+
+                        if(target.className === 'dot'){
+                              that.dis = +target.getAttribute('data-index')
+                              that.move()
+                        }
+                    },false)
+
+                    var arrowNav = document.querySelector('.arrow')
+                    arrowNav.addEventListener('click',function(e){
+                        var target = e.target,
+                            tarClsName = target.className
+
+                        if(tarClsName === 'prev'){
+                            that.dis = --that.dis < 0 ? that.sliderNum-1 : that.dis
+                        }else if(tarClsName === 'next'){
+                            that.dis = ++that.dis === that.sliderNum ? 0 : that.dis
+                        }
+                        that.move()
+                    },false)
+                }
+
+                new SliderJs('#container',{speed:1500})
+            })()
+        </script>
+    </body>
+</html>
